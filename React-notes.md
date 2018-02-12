@@ -790,3 +790,181 @@ const routes = (
 *	We can add a prop activeClassName="is-active" and modify that css with is-active class when its active
 * 	We also need to add the exact prop too
 
+### Splitting up
+*	Usually we create a router folder and have an AppRouter.js file to have the browser router stuff
+
+### Query Strings and URL Parameters
+*	Route passes down props down into components that are useful
+	* 	This includes query strings, etc.
+*	We can change the routes to take in a parameter e.g.
+
+```
+<Route path="/edit/:id" component={EditExpensePage} />
+```
+
+*	Now that component is dynamic and only accessible with id
+
+## Redux
+
+### Why do we need it? Why not just use component state?
+#### Issues
+*	Simple apps can have a clear tree representing how data should be brought down with one parent
+* 	Multiple component trees have multiple parents and sharing data isn't easy. It doesn't go one direction downwards
+*	With component state, **components aren't reusable**. The props for a repeat component don't havea the props and can't be based anywhere
+	*	you'd have to pass the same props to that duplicated component
+
+##### Questions
+*	Where do I store my state?
+* 	How do I make reusable components?
+  
+##### Redux
+*	Continue to use props if you're just passing down to a child, not when you have a long chain all the way to the bottom
+* 	Redux Store has objects to which we write/read into
+
+### Installing and Starting with Redux
+*	First start by importing create store from redux and initializing
+* 	You have to pass in a function with the current state, it can be a default value
+
+```
+import { createStore } from 'redux';
+
+const store = createStore((state = { count:0 }) => {
+	return state;
+});
+
+console.log(store.getState());
+```
+ 
+### Dispatching Actions
+*	An action is an object that gets sent to the store and it describes the type of action we want to take
+* 	Action type names convention is **all caps separated by underscores**
+*	We can dispatch an action like this:
+
+```
+store.dispatch({
+	type: 'INCREMENT'
+});
+```
+
+*	Then, we can, based on the action type, do something to the state when it was dispatched
+	*	We also pass in an extra argument, action
+
+```
+onst store = createStore((state = { count:0 }, action) => {
+
+	switch (action.type) {
+		case 'INCREMENT':
+			return {
+				count: state.count + 1
+			};
+		case 'DECREMENT':
+			return {
+				count: state.count - 1
+			}
+		case 'RESET':
+			return {
+				count: 0
+			}
+		default:
+			return state;
+	}	
+});
+```
+
+### Subscribe
+*	We can watch for changes everytime the store changes
+* 	Good way to do something when the store changes
+
+```
+store.subscribe = store.subscribe(() => {
+	console.log(store.getState());
+});
+```
+
+* The function defaults to return an unsubscribe function
+
+```
+const unsubscribe = store.subscribe = store.subscribe(() => {
+	console.log(store.getState());
+});
+
+unsubscribe();
+```
+
+### Dynamic Actions
+*	For dynamic actions 
+
+```
+case 'INCREMENT':
+	const incrementBy = typeof action.incrementBy === 'number' ? action.incrementBy : 1;
+	return {
+		count: state.count + incrementBy
+	};
+```
+
+```
+store.dispatch({
+	type: 'INCREMENT',
+	incrementBy: 5
+});
+```
+
+## Object Destructuring
+*	Basically its like named exports. This
+
+```
+const { name, age } = person;
+```
+
+*	Is equivalent to:
+
+```
+const name = person.name;
+const age = person.age;
+```
+
+*	More examples:
+
+```
+const { city, temp } = person.location;
+if(city && temp) {
+	console.log(`It's ${temp} in ${city}.`);	
+}
+```
+
+*	Just makes it more clean
+*	You can also **give new names** when you grab from the object. temp is set to temperature
+
+
+```
+const { city, temp: temperature } = person.location;
+```
+
+*	For default values we can use
+
+```
+const { name = 'anonymous', age } = person;
+```
+
+*	Or both
+
+```
+const { name: firstName = 'anonymous', age } = person;
+```
+
+## Array Destructoring
+*	Very similar to object destructoring
+
+```
+const address = ['1299 S Juniper Street', 'Rochester', 'New York', '19147'];
+
+const [, city, state = 'Hell', ] = address;
+
+console.log(`You are in ${city} ${state}.`)
+
+const item = ['Coffee (Hot)', '$2.00', '$2.50', '$2.75'];
+const [coffee, , medium, ] = item; 
+console.log(`a medium ${coffee} costs ${medium}`);
+```
+
+## Refactoring and Organizing
