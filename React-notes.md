@@ -1,4 +1,5 @@
 # React Notes
+Jordy Guntur
 
 ## Live Server
 *	Barebones, easy, beginner server. Will use this for now but in the future move to Express and Webpack dev servers
@@ -1085,11 +1086,6 @@ const expensesReducer = (state = expensesReducerDefaultState, action) => {
 *	We want to concat the state because reducers never change state or action. We're just concatenating onto the state.
 *	After dispatching, now the EXPENSES array has a new item created from the dispatched action
 
-
-### ES6 Spread Operator in Reducers
-*	Makes things a lot easier to work with array and objects
-
-
 ###	UUID - NPM package for generating unique ids
 *	Generate unique id's
 
@@ -1106,11 +1102,173 @@ import uuid from 'uuid';
 	
 ```
 
+### ES6 Spread Operator in Reducers
+*	Makes things a lot easier to work with array and objects
+*	ES6 spread operators are just a fancier way of concatenating or prepending without modifying the original array. Here is an example:
+
+```
+Take the original state, concatenate the exoense and return a new object
+return [...state, action.expense];
+```
+
+## Redux Review So Far
+*	We have a **store**
+	*	This store has objects that we can read/write into
+	* 	Here we create a store with **multiple** reducers: an expense and filter reducer
+
+```
+const store = createStore(
+	combineReducers({
+		expenses: expensesReducer,
+		filter: filtersReducer
+	})
+);
+```	
+
+*	The reducer has a **state** and an **action** and will return a new state depending on the action that will update the store
+
+```
+const expensesReducerDefaultState = [];
+
+const expensesReducer = (state = expensesReducerDefaultState, action) => {
+	switch (action.type) {
+		case 'ADD_EXPENSE':
+			return [
+			...state,
+			action.expense
+			];
+		case 'REMOVE_EXPENSE':
+			return state.filter(({ id }) => id !== action.id);
+		default:
+			return state;
+	}
+}
+```
+
+*	We have **action generators** that will take an object (with default values) and implicitly return a new object that gets used in the reducers.
+
+```
+const addExpense = (
+	{
+		description = '',
+		note = '',
+		amount = 0,
+		createdAt = 0 
+	} = {}
+) => ({
+	type: 'ADD_EXPENSE',
+	expense: {
+		id: uuid(),
+		description,
+		note,
+		amount,
+		createdAt	
+	}
+});
+```
+
+*	Now, we have dispatchers which initiate everything
+
+```
+const expenseOne = store.dispatch(addExpense({ description: 'rent', amount: 100 }));
+const expenseTwo = store.dispatch(addExpense({ description: 'coffee', amount: 300 }));
+```
+
+*	Here it **dispatches** the return object of an **action generator** that will go through all the **cases of the reducer** and **update the store**
+
+### Removing from the store
+* We **pass in the ID** of what we want to remove to the **action generator** remove Expense
+```
+store.dispatch(removeExpense({ id: expenseOne.expense.id }));
+```
+
+*	Then ... we take in that ID with NO default value and return an action with its **type** and **ID**
 
 
+```
+const removeExpense = ({ id } = {}) => ({
+	type: 'REMOVE_EXPENSE',
+	id
+});
+```
 
+*	The reducer then does the following:
+	*	It matches the type, and filters the state for the ID
+	* 	If no ID matches, filter returns **TRUE** which means nothing happens
+	*  	If it does match, filter return **FALSE** and will remove the item from the state
 
+```
+case 'REMOVE_EXPENSE':
+			return state.filter(({ id }) => id !== action.id);
+```
 
+### ES6 Spread Operator for Objects (Continued)
+*	Allows us to define a new object using an existing object
+	* 	Like what we did with arrays but this time for objects
+*	First, we need to install with:
 
+```
+npm install --save-dev babel-plugin-transform-object-rest-spread
 
+```
+
+*	Then add to .babelrc with:
+
+```
+{
+  "plugins": ["transform-object-rest-spread"]
+}
+```
+
+*	This now lets the following happen:
+
+```
+const user = {
+	name: "Jordy",
+	age: 23
+};
+
+console.log({
+	...user,
+	age: 55
+});
+```
+
+*	We can override the object's age without modifying the original object
+* 	This lets us edit expenses
+
+### Editing Item in the Store
+*	Okay, lets first dispatch the action. We pass in the id and what we want to change.. the amount.
+
+```
+store.dispatch(editExpense(expenseTwo.expense.id, { amount: 500 }));
+```
+*	Now, we make that action generator passing in id and updates and return object with type that id and the updates
+
+```
+const editExpense = (id, updates) => ({
+	type: 'EDIT_EXPENSE',
+	id,
+	updates
+});
+```
+
+*	In the reducer, we handle it by mapping for the id and modifying it
+
+```
+case 'EDIT_EXPENSE':
+	return state.map((expense) => {
+		if(expense.id === action.id) {
+			return {
+				...state,
+				...action.updates
+			};
+		} else {
+			return expense;
+		}
+	});
+```
+
+*	Go through every ID, For each if it matches the id return the new object using the spread operator which keeps the state and just overrides what you wanted to update (magic)
+* 	If not, just return that same expense per mapped item.
 
