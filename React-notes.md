@@ -968,3 +968,149 @@ console.log(`a medium ${coffee} costs ${medium}`);
 ```
 
 ## Refactoring and Organizing
+### Action Generators
+*	Functions that return action objects
+* 	Manually generating an object for every dispatch is tedious
+*  	To ameliorate this we create functions that return an object based on the input
+
+```
+store.dispatch( incrementCount({ incrementBy: 5 }) );
+```
+```
+const incrementCount = ({ incrementBy = 1 } = {}) => ({
+	type: 'INCREMENT',
+	incrementBy
+});
+```
+
+```
+case 'INCREMENT':
+return {
+	count: state.count + action.incrementBy
+};
+```
+*	Take a sec to look it over and understand it
+
+## Reducers
+*	**Pure functions**. Output is only a function of the input
+* 	Never change state or action
+*  	Reducers are functions we pass into createStore
+*  	CreateStore calls the reducers
+*  	We can create a more complex store by using **combineReducers**
+	*  It now makes the store an object with a property where the array lives
+	*	In this case expenses
+
+
+### Combining Reducers
+*	This is an example of combining 2 reducers into the store
+```
+const store = createStore(
+	combineReducers({
+		expenses: expensesReducer,
+		filter: filtersReducer
+	})
+);
+```
+
+*	Each reducer has a **default state** like this:
+
+```
+const filtersReducerDefaultState = {
+	text: '',
+	sortBy: 'date',
+	startDate: undefined,
+	endDate: undefined
+};
+```
+
+*	The reducer itself has some way to deal with different actions that come its way
+
+```
+const filtersReducer = (state = filtersReducerDefaultState, action) => {
+	switch(action.type) {
+		default:
+			return state;
+	}
+};
+```
+
+*	First lets make our **action generators**. The following are some examples
+
+```
+This is an example of an action generator for adding an expense. It takes in description, note, amount, created at with empty or zero default values.
+The object itself defaults to empty.
+It then implicity returns an object with those same values. description, is just short for description:description.
+
+const addExpense(
+	{
+		description = '',
+		note = '',
+		amount = 0,
+		createdAt = 0 
+	} = {}
+) => ({
+	type: 'ADD_EXPENSE',
+	expense: {
+		id: uuid()
+		description,
+		note,
+		amount,
+		createdAt
+	}
+});
+```
+
+*	That action generator gets called when the store **dispatches**
+
+```
+Example of store dispatching
+
+store.dispatch(addExpense({ description: 'rent', amount: 100 }));
+```
+
+*	With multiple reducers, the dispatched action will go through all of them and only when we have a CASE to handle them will something happen. If not, it'll just go to the default case.
+*	Here is an example:
+
+```
+const expensesReducer = (state = expensesReducerDefaultState, action) => {
+	switch (action.type) {
+		case 'ADD_EXPENSE':
+			return state.concat(action.expense);
+		default:
+			return state;
+	}
+}
+```
+
+*	We want to concat the state because reducers never change state or action. We're just concatenating onto the state.
+*	After dispatching, now the EXPENSES array has a new item created from the dispatched action
+
+
+### ES6 Spread Operator in Reducers
+*	Makes things a lot easier to work with array and objects
+
+
+###	UUID - NPM package for generating unique ids
+*	Generate unique id's
+
+```
+import uuid from 'uuid';
+
+	expense: {
+		id: uuid(),
+		description,
+		note,
+		amount,
+		createdAt
+	}
+	
+```
+
+
+
+
+
+
+
+
+
