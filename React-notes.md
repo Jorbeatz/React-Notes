@@ -1272,3 +1272,70 @@ case 'EDIT_EXPENSE':
 *	Go through every ID, For each if it matches the id return the new object using the spread operator which keeps the state and just overrides what you wanted to update (magic)
 * 	If not, just return that same expense per mapped item.
 
+### Filtering Redux Data
+*	Create a function that takes in (in our case expenses) and what we want to filter by, we passed in the states filters when we call the function and then in the actualy function, we pick out what we want from the filters. Here is an example:
+
+```
+const visibleExpenses = getVisibleExpenses(state.expenses, state.filter);
+	console.log(visibleExpenses);
+```
+
+```
+const getVisibleExpenses = (expenses, { text, sortBy, startDate, endDate }) => {
+	return expenses.filter((expense) => {
+		const startDateMatch = typeof startDate !== 'number' || expense.createdAt >= startDate;
+		const endDateMatch = typeof endDate !== 'number' || expense.createdAt <= endDate;
+		const textMatch = expense.description.toLowerCase().includes(text.toLowerCase());
+
+		return startDateMatch && endDateMatch && textMatch;
+	});
+```
+
+*	From what I get, it takes the **state expenses and filters than filters by the criteria**. If it all matches the new array returned is the array of things that match that criteria.
+
+
+### Sorting Redux Data
+
+```
+const getVisibleExpenses = (expenses, { text, sortBy, startDate, endDate }) => {
+	return expenses.filter((expense) => {
+		const startDateMatch = typeof startDate !== 'number' || expense.createdAt >= startDate;
+		const endDateMatch = typeof endDate !== 'number' || expense.createdAt <= endDate;
+		const textMatch = expense.description.toLowerCase().includes(text.toLowerCase());
+
+		return startDateMatch && endDateMatch && textMatch;
+	}).sort((a, b) => {
+		if(sortBy === 'date') {
+			return a.createdAt < b.createdAt ? 1 : -1;
+		} else if(sortBy === 'amount') {
+			return a.amount < b.amount ? 1 : -1;
+		};	
+	});
+};
+```
+
+*	Take the array that you just filtered with the conditions than we're going to sort that. Sort **takes in two vars a and b**. It's a **pair comparison** as it looks through.
+* 	If we're sorting by date **return true if one is less than the other** which puts it in front or for amounts. **1, -1 is a sub for true or false.**
+
+## Connecting React and Redux
+*	Creating connected components which means that they're connected to the store and can dispatch actions.
+* 	Split up redux into separate folders: **actions, reducers, store, selectors**
+*  	Actions - action generators per case : expenses.js, filters.js
+*	Note: to export default components, the syntax is 
+
+```
+export default (expenses, { text, sortBy, startDate, endDate }) => {
+	return ...
+};
+```
+
+*	Remember that you can take out the name and auto define it when importing
+* 	After everything is set in the folders, you just have to correctly import what you're using in each file. In app.js you can then make the store and dispatch actions etc.
+
+## Higher Order Components
+*	A component that renders another component
+* 	Advantages
+	*	Reuse Code
+	* 	Render Hijacking
+	*  Prop Manipulation
+	*  Acstract State
