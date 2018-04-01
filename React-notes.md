@@ -1339,3 +1339,118 @@ export default (expenses, { text, sortBy, startDate, endDate }) => {
 	* 	Render Hijacking
 	*  Prop Manipulation
 	*  Acstract State
+*  You're actually passing in a component as a prop and returning a new component. That new component is a higher order component
+*  	We can use the spread operator to pass in parents from the lower order component
+
+```
+const withAdminWarning = (WrappedComponent) => {
+	return (props) => (
+		<div>
+			{ props.isAdmin && <p> Private Info </p> }
+			<WrappedComponent {...props} />
+		</div>
+	);
+};
+
+const AdminInfo = withAdminWarning(Info);
+
+ReactDOM.render(<AdminInfo isAdmin = {true} info="Test Message" />, document.getElementById('app'));
+```
+
+*	We create an instance of the higher order component *withAdminWarning* and call it *AdminInfo*
+* 	The wrapped component passed in is the info component. That is returned and the info prop can be accessed with the spread operator -- not too sure how that works.
+*  	However, remember JS conditional where if its true, the second will render else it wont. Not your **usual &&**
+
+## Connecting Store and Component with React-Redux
+*	The react-redux library gives us a provider store and a connect function that we use for every component that wants to connect to the store
+
+### Provider
+* 	Provider in app.js means that we don't have to pass a store around, we have a store that every component can access
+
+```
+const jsx = (
+	<Provider store={store}>
+		<AppRouter />
+	</Provider>
+);
+
+ReactDOM.render(jsx, document.getElementById("app"));
+```
+
+### Connect
+*	We're given a connect function and we pass in a mapStateToProps functions that tells what props to pass as well as the the component.
+* 	We export from the return of connect
+*	The props changes with how the store changes
+
+```
+import React from 'react';
+import { connect } from 'react-redux';
+
+const ExpenseList = (props) => (
+	<div>
+		<h1> Expense List </h1>
+		{props.expenses.length}
+		{props.filters.text}
+	</div>
+);
+
+const mapStateToProps = (state) => {
+	return {
+		expenses: state.expenses,
+		filters: state.filter
+	};
+};
+
+export default connect(mapStateToProps)(ExpenseList);
+```
+
+### Filtering with Input
+*	We can create a component that **filters the expenses** based on what text was inputted
+	* 	First, create a component that will handle that
+	*  	Then, connect to the store with a mapStateToProps which will return the filters in the state
+		*	This is so that our components value will always be the current filter in the store
+
+```
+const MapStateToProps = (state) => {
+	return {
+		filters: state.filter
+	}
+};
+```
+
+*	Then component will return an input where the value is the props.filters.text and will also .. onChange, update the store by dipatching an action, setTextFilter
+
+```
+const ExpenseListFilters = (props) => (
+	<div>
+		<input type="text" value={props.filters.text} onChange={(e) => {
+			props.dispatch(setTextFilter(e.target.value));
+		}}/>
+	</div>
+);
+```
+
+### Removing from Store
+```
+<button onClick={() => {
+		dispatch(removeExpense({ id }));
+}}>remove</button>
+```
+
+### Select Dropdown with Options
+```
+<select 
+	value={props.filters.sortBy} 
+	onChange={(e) => {
+		if (e.target.value === 'date') {
+			props.dispatch(sortByDate());
+		} else if (e.target.value === 'amount') {
+			props.dispatch(sortByAmount());
+		}
+	}}>
+	<option value="date">date</option>
+	<option value="amount">amount</option>
+</select>
+```
+
+### Adding an Expense
