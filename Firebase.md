@@ -89,4 +89,14 @@ promise.then((data) => {
 });
 ```
 
-*	Either one works but the one with catch is kinda more explicit and clear 
+*	Either one works but the one with catch is kinda more explicit and clear
+* 	Most of the time, you don't need to make your own promise and its provided by the library you are using
+*	Set() returns a promise so we can chain our .then() function with that
+
+## Removing Data from Firebase
+*	You can either call remove on the reference or just set it to null
+
+```javascript
+
+```
+
